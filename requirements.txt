@@ -1,0 +1,3 @@
+pyodbc
+requests
+python-dotenv
