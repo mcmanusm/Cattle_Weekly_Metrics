@@ -1,0 +1,32 @@
+name: Run HubDB Sync
+
+on:
+  schedule:
+    - cron: '0 22 * * 1,3,5'  # Mon/Wed/Fri 8am AEST
+  workflow_dispatch:  # allows you to run it manually too
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install ODBC Driver
+        run: |
+          curl https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
+          curl https://packages.microsoft.com/config/ubuntu/22.04/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list
+          sudo apt-get update
+          sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+      - name: Run sync script
+        run: python hubdb_sync.py
+        env:
+          HUBSPOT_TOKEN: ${{ secrets.HUBSPOT_TOKEN }}
+          HUBDB_TABLE_ID: ${{ secrets.HUBDB_TABLE_ID }}
+          DB_SERVER: ${{ secrets.DB_SERVER }}
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
